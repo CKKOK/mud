@@ -59,12 +59,14 @@ $(function() {
     }
 
     // Enable swipe-based navigation (to turn off if touch-functionality is not detected)
-    $(window).swipe({
+    // Note: This is interfering with the scrolling of the room info element
+    $('.info-panels').swipe('enable');
+    $('.info-panels').swipe({
        swipe: function(event, direction, distance, duration, fingerCount, fingerData) {
           console.log('Swiped ' + direction);
        },
        threshold: 75
     });
-    
+
     setTimeout(function(){$('.curtain').fadeOut(600)}, 1500);
 });
