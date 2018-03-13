@@ -3,11 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="./css/bootstrap.css">
     <link rel="stylesheet" href="./css/style.css">
     <script src="./js/jquery-3.3.1.js"></script>
+    <script src="./js/jquery.touchSwipe.js"></script>
     <script src="./js/bootstrap.js"></script>
     <script src="./js/respond.js"></script>
     <script src="./js/game.js"></script>
@@ -15,6 +17,11 @@
 </head>
 
 <body>
+    <div class="curtain">
+        <div class="title">
+            Epic Adventure v2
+        </div>
+    </div>
     <div class="container-fluid">
         <div class="row room-row">
             <div class="col-xs-12 room-info">
@@ -23,47 +30,50 @@
         </div>
         
         <div class="row info-panels">
-            <div class="row action-response-row">
-                <div class="col-xs-12 action-response">
-                    This is for action responses.
+            <div class="col-xs-12">
+                <div class="row action-response-row">
+                    <div class="col-xs-12 action-response">
+                        <span class="action-response-text"></span>
+                    </div>
+                </div>
+                <div class="row nav-row">
+                    <div class="col-xs-12 nav-info">
+                            <span class="nav">Go: <span class="nav-north">(<span class="nav-hotkey">N</span>)orth</span> <span class="nav-south">(<span class="nav-hotkey">S</span>)outh</span> <span class="nav-east">(<span class="nav-hotkey">E</span>)ast</span> <span class="nav-west">(<span class="nav-hotkey">W</span>)est</span></span>
+                    </div>
+                </div>
+                <div class="row game-row">
+                    <div class="col-xs-12 game-message">
+                        
+                    </div>
+                </div>
+                <div class="row info-row">
+                    <div class="col-xs-6 col-md-4 character-info">
+                        Character info panel
+                    </div>
+                    <div class="hidden-sm hidden-xs col-md-4 command-panel">
+                        Command / inventory panel
+                    </div>
+                    <div class="col-xs-6 col-md-4 enemy-info">
+                        Enemy info panel
+                    </div>
                 </div>
             </div>
-            <div class="row nav-row">
-                <div class="col-xs-12 nav-info">
-                    Go: (N)orth (S)outh (E)ast (W)est
-                </div>
-            </div>
-            <div class="row game-row">
-                <div class="col-xs-12 game-message">
-                    This is for game messages.
-                </div>
-            </div>
-            <div class="row info-row">
-                <div class="col-xs-6 col-md-4 character-info">
-                    Character info panel
-                </div>
-                <div class="hidden-sm hidden-xs col-md-4 command-panel">
-                    Command / inventory panel
-                </div>
-                <div class="col-xs-6 col-md-4 enemy-info">
-                    Enemy info panel
+            <div class="row input-row fixed-bottom">
+                <div class="col-xs-12 input-container">
+                    <div class="row hidden-md hidden-lg hidden-el command-row">
+                        <div class="col-xs-12 command-bar">
+                            Look | Attack | Cast | Flee 
+                        </div>
+                    </div>
+                    <div class="row input-area-row">
+                        <div class="col-xs-12 input-area">
+                            > <input type="text" id="player-input">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="row input-row">
-            <div class="row hidden-md hidden-lg hidden-el command-row">
-                <div class="col-xs-12 command-bar">
-                    Look | Attack | Cast | Flee 
-                </div>
-            </div>
-            <div class="row input-area-row">
-                <div class="col-xs-12 input-area">
-                    >
-                    <input type="text" id="player-input">
-                </div>
-            </div>
-        </div>
     </div>
 </body>
 

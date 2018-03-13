@@ -1,29 +1,72 @@
+* {
+    box-sizing: border-box;
+}
+
 html, body {
     height: 100%;
     font-size: 16px;
     overflow: hidden;
+    position: fixed;
+}
+
+.curtain {
+    position: fixed;
+    background-image: url('https://nerdist.com/wp-content/uploads/2015/08/Dungeons-and-Dragons-movie.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 1;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.title {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    font-size: 3em;
+    font-weight: 800;
+    text-align: center;
+    color: #eee;
+    text-shadow: 4px 4px #444;
 }
 
 .container-fluid {
     height: 100%;
+    position: relative;
+    top: 0;
+    left: 0;
     overflow: hidden;
     background-color:black;
 }
 
 .room-row {
-    min-height: 100%;
-    overflow: hidden;
-    position: relative;
+    top: 0;
+    overflow-y: scroll;
+    padding-top: 10px;
 }
 
 .room-info {
-    padding-top:10px;
-    position:absolute;
-    top:0;
-    bottom:402px;
-    overflow-y: auto;
-    background-color:#111;
     color: white;
+}
+
+.info-panels {
+    text-shadow: 2px 2px black;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.action-response {
+    height: 2em;
+    line-height: 2em;
+    text-align: center;
+}
+
+.action-response-text {
+    color: red;
 }
 
 .nav-info {
@@ -33,37 +76,32 @@ html, body {
     line-height: 2em;
 }
 
-.action-response {
-    position: relative;
-    height: 2em;
-    line-height: 2em;
-    text-align: center;
+.nav {
+    color: white;
+}
+
+.nav-north, .nav-south, .nav-east, .nav-west {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+
+.nav-hotkey {
     color: red;
 }
 
-.info-panels {
-    position: absolute;
-    bottom: 5em;
-    width: 100%;
-    text-shadow: 2px 2px black;
-}
-
 .game-row {
-    position: relative;
-    height: 3em;
+    height: 2em;
 }
 
 .game-message {
-    position:absolute;
     overflow-x: auto;
     white-space: nowrap;
     background-color: blue;
     line-height: 1.5em;
-    font-size: 2em;
+    font-size: 1.5em;
+    height: 2em;
     text-align: center;
     color: white;
-    height: 3em;
-    width: 100%;
 }
 
 .info-row {
@@ -71,8 +109,9 @@ html, body {
 }
 
 .character-info, .command-panel, .enemy-info {
-    height: 210px;
+    height: 12em;
     padding: 1em 1em;
+    line-height: 1.5em;
 }
 
 .character-info {
@@ -90,81 +129,70 @@ html, body {
     color: white;
 }
 
-.input-row {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 5em;
-    background-color: gray;
-}
-
 .command-row {
-    position: relative;
-    margin: 0;
-    padding: 0;
-    height: 3em;
-    line-height: 3em;
-    background-color: gray;
-    color: white;
-    width: 100%;
+    height: 2em;
+    line-height: 2em;
 }
 
 .command-bar {
     background-color: darkblue;
     color: white;
-    height: 3em;
-    line-height: 1.5em;
-    font-size: 2em;
-    margin: 0;
-    position: absolute;
-    width: 100%;
+    text-align: center;
     overflow-x: auto;
     white-space: nowrap;
 }
 
 .input-area-row {
-    position: absolute;
-    margin: 0;
-    padding: 0;
-    bottom: 2em;
-    width: 100%;
+    height: 2em;
+    line-height: 2em;
+    text-shadow: none;
 }
 
 .input-area {
     background-color: whitesmoke;
-    margin: 0;
-    width: 100%;
-    position: absolute;
-    height: 2em;
-    line-height: 2em;
+    text-align: center;
 }
 
 #player-input {
-    border: none;
-    height: 2em;
-    line-height: 2em;
     width: 90%;
+    height: 1.5em;
+    line-height: 1.5em;
 }
 
 @media (min-width: 992px) {
-    .info-panels {
-        bottom: 3em;
-    }
 
-    .input-area-row {
-        position: absolute;
-        margin: 0;
-        padding: 0;
-        bottom: 3em;
+}
+
+/* iPhone 5/5S/SE support D: */
+@media (max-height: 640px) {
+    html {
+        position: fixed;
+        overflow: hidden;
         width: 100%;
     }
 
-    .input-area {
-        height: 3em;
-        line-height: 3em;
+    .action-response {
+        height: 1em;
+        line-height: 1em;
     }
 
-    .input-row {
-        height: 2em;
+    .nav-info {
+        height: 1.3em;
+        line-height: 1.3em;
+    }
+
+    .game-row {
+        height: 1.3em;
+    }
+    
+    .game-message {
+        line-height: 1.3em;
+        font-size: 1em;
+        height: 1.3em;
+    }
+
+    .character-info, .command-panel, .enemy-info {
+        height: 100px;
+        padding: 3px 5px;
     }
 }
