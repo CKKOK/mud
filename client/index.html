@@ -12,9 +12,9 @@
     <script src="./js/jquery.touchSwipe.js"></script>
     <script src="./js/bootstrap.js"></script>
     <script src="./js/respond.js"></script>
-    <script src="./js/roomdata.js"></script>
+    <!-- <script src="./js/roomdata.js"></script>
     <script src="./js/monsterdata.js"></script>
-    <script src="./js/itemdata.js"></script>
+    <script src="./js/itemdata.js"></script> -->
     <script src="./js/game.js"></script>
     <title>A Multi-User Dungeon</title>
 </head>
@@ -25,7 +25,7 @@
             Epic Adventure v2
         </div>
     </div>
-    <div id="modal">
+    <!-- <div id="modal">
         <div id="modal-content">
             <div id="modal-title">
                 Modal Title
@@ -34,7 +34,26 @@
                 Lorem ipsum dolor sit, amet consectetur adipisicing elit. Officia enim culpa et quam similique, aperiam consectetur odio voluptatum repellat in sequi ea modi! Natus asperiores atque animi iusto fugit, veritatis unde eos ex amet consectetur labore optio facere saepe veniam neque quo a, maxime eligendi! Dolore autem quos perspiciatis illum.
             </div>
         </div>
-    </div>
+    </div> -->
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modal-title">You died</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body" id="modal-text">
+              Yes, you so dead. Restart?
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="restart">Restart</button>
+            </div>
+          </div>
+        </div>
+      </div>
     <div class="container-fluid">
         <div class="row room-row">
             <div class="column col-xs-12 room-info">
@@ -69,14 +88,17 @@
                     </div>
                     <div class="hidden-sm hidden-xs col-md-4 center-panel">
                         <div class="command-panel">
-                            abc
+                            
                         </div>
                         <div class="inventory-panel">
-                            abc
+                            
                         </div>
                         <div class="console-panel">
-                            abc
+                            
                         </div>
+                        <div class="cmdpanelshow">Commands</div>
+                        <div class="invpanelshow">Inventory</div>
+                        <div class="consoleshow">Console</div>
                     </div>
                     <div class="col-xs-6 col-md-4 enemy-info">
                     </div>
@@ -86,7 +108,7 @@
                 <div class="col-xs-12 input-container">
                     <div class="row hidden-md hidden-lg hidden-el command-row">
                         <div class="col-xs-12 command-bar">
-                            Look | Attack | Cast | Flee | Help
+                            <span id="cmd-look">Look</span> | <span id="cmd-attack">Attack</span> | Cast | Flee | Help
                         </div>
                     </div>
                     <div class="row input-area-row">

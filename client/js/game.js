@@ -1,19 +1,18 @@
+var roomData, lootData, enemyData;
 var __ui_window_height, __ui_window_width;
-var __ui_room_title, __ui_room_text, __ui_action_response, __ui_nav, __ui_nav_options, __ui_game_message, __ui_character_panel, __ui_inventory_panel, __ui_enemy_panel, __ui_command_bar, __ui_center_panel, __ui_input, __ui_modal;
+var __ui_room_title, __ui_room_text, __ui_action_response, __ui_nav, __ui_nav_options, __ui_game_message, __ui_character_panel, __ui_enemy_panel, __ui_command_bar, __ui_center_panel, __ui_command_panel, __ui_inventory_panel, __ui_console_panel, __ui_input, __ui_modal;
 var localStorage, sessionStorage;
 var playerCharacter = [];
 var currentCharacter = 0;
-var CHAR_COUNT = 0;
 var COOLDOWN_ARRAY = [];
 var SYS_TIMER = null;
 var acceptInput = true;
 var currentRoom = 0;
 var canMove = true;
 var gameOver = false;
-var NAV_OPTION_TRANSITION_TIME = 200;
 var characterData = {
-	'template': {
-		name: 'Fizban',
+    'template': {
+        name: 'Fizban',
 		hp: 20,
 		maxhp: 30,
 		mindmg: 1,
@@ -22,12 +21,15 @@ var characterData = {
 		inventory: [],
 	}
 };
+
+// Timings and counts
+var NAV_OPTION_TRANSITION_TIME = 200;
 var MODAL_FADE_IN_TIME = 300;
+var CHAR_COUNT = 0;
 var ENEMY_COUNT = 0;
 var TOUCH_CAPABLE = false;
 
-
-
+// Strings
 var DEFAULT_HELP = 'This is the default help text';
 var ITEM_NOT_FOUND_IN_ROOM = 'You grab at illusionary straws.';
 var ATTACK_INVALID_TARGET = 'You furiously attack the air, like a drunken buffoon.';
@@ -64,36 +66,25 @@ function Character (shortName) {
     this.UIIndex = CHAR_COUNT;
     CHAR_COUNT++;
 
-    this.UIElement = document.createElement('div');
-    this.UIElement.setAttribute('class', 'character');
-    this.UIElement.setAttribute('id','c-'+this.name);
+    this.UIElement = $('<div></div>').addClass('character').attr('id', 'c-'+this.name);
 
-    var charName = document.createElement('p');
-    charName.setAttribute('class', 'character-stat');
-    charName.setAttribute('id', 'character-name-' + this.name);
-    charName.innerHTML = this.name;
+    var charName = $('<p></p>').addClass('character-stat').attr('id', 'character-name-'+this.name).text(this.name);
+    var charHp = $('<p></p>').addClass('character-stat').attr('id', 'character-hp-'+this.name).text('HP: ' + this.hp + '/' + this.maxhp);
+    var charDmg = $('<p></p>').addClass('character-stat').attr('id', 'character-dmg-'+this.name).text('DMG: ' + this.mindmg + ' - ' + this.maxdmg);
 
-    var charHP = document.createElement('p');
-    charHP.setAttribute('class', 'character-stat');
-    charHP.setAttribute('id', 'character-hp-' + this.name);
-    charHP.innerHTML = 'HP: ' + this.hp + ' / ' + this.maxhp;
+    var charCooldown = $('<div></div>').addClass('progress');
+    var tmp = $('<div></div>').addClass('progress-bar').addClass('cooldown').attr('role','progressbar').attr('id','character-cooldown-'+this.name).width('100%');
+    charCooldown.append(tmp);
+    
+    this.UIElement.append(charName);
+    this.UIElement.append(charHp);
+    this.UIElement.append(charDmg);
+    this.UIElement.append(charCooldown);
 
-    var charDMG = document.createElement('p');
-    charDMG.setAttribute('class', 'character-stat');
-    charDMG.setAttribute('id', 'character-dmg-' + this.name);
-    charDMG.innerHTML = 'Damage: ' + this.mindmg + ' - ' + this.maxdmg;
-
-    var charCooldown = document.createElement('progress');
-    charCooldown.setAttribute('class', 'character-stat cooldown');
-    charCooldown.setAttribute('id', 'character-cooldown-' + this.name);
-    charCooldown.setAttribute('value', '100');
-    charCooldown.setAttribute('max', '100');
-
-    this.UIElement.appendChild(charName);
-    this.UIElement.appendChild(charHP);
-    this.UIElement.appendChild(charDMG);
-    this.UIElement.appendChild(charCooldown);
-
+    // $('.cname').append(charName);
+    // $('.cstat').append(charHp);
+    // $('.cstat').append(charDmg)
+    // $('.cdown').append(charCooldown);
     this.cooldownIndicator = charCooldown;
 
     __ui_character_panel.append(this.UIElement);
@@ -107,7 +98,7 @@ Character.prototype.adjustHP = function (delta) {
     if (this.hp > this.maxhp) {
         this.hp = this.maxhp;
     }
-    document.getElementById('character-hp-' + this.name).innerHTML = 'HP: ' + this.hp + ' / ' + this.maxhp;
+    $('#character-hp-' + this.name).text('HP: ' + this.hp + '/' + this.maxhp);
 }
 
 Character.prototype.adjustMaxHP = function (delta) {
@@ -118,7 +109,7 @@ Character.prototype.adjustMaxHP = function (delta) {
     if (this.maxhp < this.hp) {
         this.hp = this.maxhp;
     }
-    document.getElementById('character-hp-' + this.name).innerHTML = 'HP: ' + this.hp + ' / ' + this.maxhp;
+    $('#character-hp-' + this.name).text('HP: ' + this.hp + '/' + this.maxhp);
 }
 
 Character.prototype.adjustMinDmg = function (delta) {
@@ -129,7 +120,7 @@ Character.prototype.adjustMinDmg = function (delta) {
     if (this.mindmg >= this.maxdmg) {
         this.mindmg = this.maxdmg - 1;
     }
-    document.getElementById('character-dmg-' + this.name).innerHTML = 'Damage: ' + this.mindmg + ' - ' + this.maxdmg;
+    $('#character-dmg-' + this.name).text('DMG: ' + this.mindmg + ' - ' + this.maxdmg);
 }
 
 Character.prototype.adjustMaxDmg = function (delta) {
@@ -140,7 +131,7 @@ Character.prototype.adjustMaxDmg = function (delta) {
     if (this.maxdmg <= this.mindmg) {
         this.maxdmg = this.mindmg + 1;
     }
-    document.getElementById('character-dmg-' + this.name).innerHTML = 'Damage: ' + this.mindmg + ' - ' + this.maxdmg;
+    $('#character-dmg-' + this.name).text('DMG: ' + this.mindmg + ' - ' + this.maxdmg);
 }
 
 Character.prototype.attack = function (enemy) {
@@ -149,7 +140,7 @@ Character.prototype.attack = function (enemy) {
     gameMessage(this.name + ' hits ' + enemy.name + ' for ' + dmg + ' damage!');
     this.canAttack = false;
     this.cooldownCount = 0;
-    this.cooldownIndicator.setAttribute('value', this.cooldownCount / this.cooldown);
+    this.cooldownIndicator.width(((this.cooldownCount / this.cooldown) * 100) + '%');
     COOLDOWN_ARRAY.push(this);
     if (!SYS_TIMER) {
         SYS_TIMER = setInterval(timerduties, 167);
@@ -164,11 +155,13 @@ Character.prototype.receiveHit = function (enemy, dmg) {
 }
 
 Character.prototype.kill = function () {
+    localStorage.lastroom = 0;
     this.adjustHP(-this.hp);
     gameMessage('You died', 'red');
-    // document.getElementById('input').style.display = 'none'; document.removeEventListener('keypress', go);
+    $('#player-input').fadeOut(500);
+    $(window).off('keydown');
     gameOver = true;
-    // setTimeout(toggleModal, 3000);
+    setTimeout(showModal, 3000);
 }
 
 Character.prototype.hasItem = function (itemName) {
@@ -201,29 +194,26 @@ function Enemy (shortName) {
     this.UIIndex = ENEMY_COUNT;
     ENEMY_COUNT++;
 
-    this.UIElement = document.createElement('li');
-    this.UIElement.setAttribute('class', 'enemy');
-    this.UIElement.setAttribute('id','e-' + this.UIIndex);
+    this.UIElement = $('<div></div>').addClass('enemy').attr('id', 'e-' + this.UIIndex);
+    
+    var name = $('<div></div>').attr('id', 'e-name-'+this.UIIndex).text(this.name);
+    var hp = $('<div></div>').attr('id', 'e-hp-'+this.UIIndex).text('HP: ' + this.hp + '/' + this.maxhp);
 
-    this.UIElement.innerHTML = this.name + ': <span id="e-hp-' + this.UIIndex + '">' + this.hp + '</span> / <span id="e-maxhp-' + this.UIIndex + '">' + this.maxhp + '</span>';
+    this.cooldownElement = $('<div></div>').addClass('progress');
+    this.cooldownIndicator = $('<div></div>').addClass('progress-bar').addClass('cooldown').attr('role','progressbar').attr('id','e-cooldown-'+this.UIIndex).width('100%');
+    this.cooldownElement.append(this.cooldownIndicator);
 
-    this.cooldownIndicator = document.createElement('progress');
-    this.cooldownIndicator.setAttribute('class', 'cooldown');
-    this.cooldownIndicator.setAttribute('id','e-cooldown-' + this.UIIndex);
-    this.cooldownIndicator.setAttribute('value','100');
-    this.cooldownIndicator.setAttribute('max','100');
-
-    this.UIElement.appendChild(this.cooldownIndicator);
+    this.UIElement.append(name).append(hp).append(this.cooldownElement);
 
     __ui_enemy_panel.append(this.UIElement);
 }
 
 Enemy.prototype.hide = function () {
-    this.UIElement.style.display = 'none';
+    this.UIElement.hide();
 }
 
 Enemy.prototype.show = function () {
-    this.UIElement.style.display = 'block';
+    this.UIElement.show();
 }
 
 Enemy.prototype.adjustHP = function (delta) {
@@ -234,8 +224,7 @@ Enemy.prototype.adjustHP = function (delta) {
     if (this.hp > this.maxhp) {
         this.hp = this.maxhp;
     }
-    // document.getElementById('e-' + this.UIIndex).innerHTML = this.name + ': ' + this.hp + ' / ' + this.maxhp;
-    document.getElementById('e-hp-' + this.UIIndex).innerHTML = this.hp;
+    $('#e-hp-'+this.UIIndex).text('HP: ' + this.hp + '/' + this.maxhp);
 }
 
 Enemy.prototype.adjustMaxHP = function (delta) {
@@ -246,8 +235,7 @@ Enemy.prototype.adjustMaxHP = function (delta) {
     if (this.maxhp < this.hp) {
         this.hp = this.maxhp;
     }
-    // document.getElementById('e-' + this.UIIndex).innerHTML = this.name + ': ' + this.hp + ' / ' + this.maxhp;
-    document.getElementById('e-maxhp-' + this.UIIndex).innerHTML = this.maxhp;
+    $('#e-hp-'+this.UIIndex).text('HP: ' + this.hp + '/' + this.maxhp);
 }
 
 Enemy.prototype.adjustMinDmg = function (delta) {
@@ -276,7 +264,7 @@ Enemy.prototype.attack = function (char) {
     gameMessage(this.name + ' hits ' + char.name + ' for ' + dmg + ' damage!', 'red');
     this.canAttack = false;
     this.cooldownCount = 0;
-    this.cooldownIndicator.setAttribute('value', this.cooldownCount / this.cooldown);
+    this.cooldownIndicator.width(((this.cooldownCount / this.cooldown) * 100) + '%');
     COOLDOWN_ARRAY.push(this);
     if (!SYS_TIMER) {
         SYS_TIMER = setInterval(timerduties, 167);
@@ -286,12 +274,18 @@ Enemy.prototype.attack = function (char) {
 Enemy.prototype.receiveHit = function (enemy, dmg) {
     this.adjustHP(-dmg);
     if (this.hp <= 0) {
-        this.kill();
+        this.kill(enemy);
     }
 }
 
 Enemy.prototype.kill = function (character) {
-    this.UIElement.parentNode.removeChild(this.UIElement);
+    if (this.loot.length > 0) {
+        this.loot.forEach(function(item){
+            roomData[currentRoom].currentLoot.push(new InventoryItem(lootData[item]));
+            gameMessage(this.name + ' dropped ' + lootData[item]['name'] + '!');
+        })
+    }
+    this.UIElement.remove();
     gameMessage(character.name + ' killed ' + this.name + '!');
     roomData[currentRoom].currentEnemies.splice(roomData[currentRoom].currentEnemies.indexOf(this), 1);
     if (roomData[currentRoom].currentEnemies.length == 0) {
@@ -316,7 +310,7 @@ function InventoryItem (item) {
         this.hpbonus = item.hpbonus;
         break;
     case 'consumable':
-        this.onConsume = item.onConsume;
+        this.onConsume = new Function('owner', item.onConsume);
         break;
     default:
         break;
@@ -344,25 +338,25 @@ InventoryItem.prototype.give = function (character) {
         break;
     }
 
-    this.UIElement = document.createElement('li');
-    this.UIElement.innerHTML = this.name;
+    this.UIElement = $('<div></div>').text(this.name);
+    // this.UIElement.innerHTML = this.name;
 
     __ui_inventory_panel.append(this.UIElement);
     this.owner.inventory.push(this);
 }
 
 InventoryItem.prototype.remove = function () {
-    this.UIElement.parentNode.removeChild(this.UIElement);
+    this.UIElement.remove();
 
     switch (this.class) {
     case 'weapon':
-        this.owner.adjustmindmg(-this.mindmg);
-        this.owner.adjustmaxdmg(-this.maxdmg);
+        this.owner.adjustMinDmg(-this.mindmg);
+        this.owner.adjustMaxDmg(-this.maxdmg);
         this.owner.cooldown = this.owner.defaultcooldown;
         roomData[currentRoom].loot.push(this.shortname);
         break;
     case 'armour':
-        this.owner.adjustmaxhp(-this.hpbonus);
+        this.owner.adjustMaxHp(-this.hpbonus);
         roomData[currentRoom].loot.push(this.shortname);
         break;
     default:
@@ -373,11 +367,11 @@ InventoryItem.prototype.remove = function () {
     roomData[currentRoom].currentLoot.push(this);
 }
 
-InventoryItem.prototype.drop = function (owner, thing) {
+function dropInventoryItem (owner, thing) {
     var check = false;
     var tmp;
-    for (let item in owner.inventory) {
-        if (owner.inventory[item].name.toLowerCase() == thing.toLowerCase()) {
+    for (var item in owner.inventory) {
+        if (owner.inventory[item].shortName.toLowerCase() == thing.toLowerCase()) {
             check = true;
             tmp = owner.inventory[item];
             break;
@@ -390,11 +384,11 @@ InventoryItem.prototype.drop = function (owner, thing) {
     }
 }
 
-InventoryItem.prototype.consume = function (owner, thing) {
+function inventoryItemConsume (owner, thing) {
     var check = false;
     var tmp;
-    for (let item in owner.inventory) {
-        if (owner.inventory[item].name.toLowerCase() == thing) {
+    for (var item in owner.inventory) {
+        if (owner.inventory[item].shortName.toLowerCase() == thing) {
             check = true;
             tmp = owner.inventory[item];
             break;
@@ -420,9 +414,9 @@ function timerduties () {
 			COOLDOWN_ARRAY.splice(i, 1);
 		} else {
 			COOLDOWN_ARRAY[i].cooldownCount += 167;
-			COOLDOWN_ARRAY[i].cooldownIndicator.setAttribute('value', (COOLDOWN_ARRAY[i].cooldownCount / COOLDOWN_ARRAY[i].cooldown) * 100);
+			COOLDOWN_ARRAY[i].cooldownIndicator.width(((COOLDOWN_ARRAY[i].cooldownCount / COOLDOWN_ARRAY[i].cooldown) * 100)+'%');
 			if (COOLDOWN_ARRAY[i].cooldownCount >= COOLDOWN_ARRAY[i].cooldown) {
-				COOLDOWN_ARRAY[i].cooldownIndicator.setAttribute('value', 100);
+				COOLDOWN_ARRAY[i].cooldownIndicator.width('100%');
 				COOLDOWN_ARRAY[i].cooldownCount = COOLDOWN_ARRAY[i].cooldown;
 				COOLDOWN_ARRAY[i].canAttack = true;
 				if (COOLDOWN_ARRAY[i].type == 'enemy') {
@@ -497,12 +491,16 @@ function gameMessage(msg, color) {
         var msgColor = color || 'white';
         __ui_game_message.html(msg);
         __ui_game_message.css('color', msgColor);
+        __ui_console_panel.append('<br>' + msg);
+        __ui_console_panel.scrollTop(__ui_console_panel.prop('scrollHeight'));
     }
 }
 
 function actionResponse(response) {
     if (response !== null) {
         __ui_action_response.html(response);
+        __ui_console_panel.append('<br>' + response);
+        __ui_console_panel.scrollTop(__ui_console_panel.prop('scrollHeight'));
     };
 };
 
@@ -512,12 +510,14 @@ function inputFocus() {
     }
 }
 function gotoRoom(index) {
-	currentRoom = index;
+    currentRoom = index;
+    localStorage.lastroom = currentRoom;
     displayRoomInfo(roomData[index].roomTitle, roomData[index].roomInfo);
     updateNavOptions();
 	gameMessage('');
 	if (roomData[index].hasOwnProperty('onEnter')) {
-		roomData[index].onEnter();
+        var newFunc = new Function ('', roomData[index]['onEnter']);
+        newFunc();
 	}
 	if (!roomData[index].visited) {
 		roomData[index].visited = true;
@@ -553,7 +553,8 @@ function move(direction) {
                     return;
                 } else {
                     if (roomData[currentRoom].hasOwnProperty('onExit')) {
-                        roomData[currentRoom].onExit();
+                        var newFunc = new Function ('', roomData[currentRoom]['onExit']);
+                        newFunc();
                     }
                     gotoRoom(roomData[currentRoom].navChoices[direction]);
                 }
@@ -584,10 +585,33 @@ function go(event) {
             case 'w':
                 move(command);
                 break;
+            case 'loot':
+                var response = 'You see a ';
+                var tmp = roomData[currentRoom].currentLoot.length;
+                if (tmp === 0) {
+                    response = 'Move along, nothing to see here.';
+                } else if (tmp === 1) {
+                    response += (roomData[currentRoom].currentLoot[0].name + '.');
+                } else if (tmp === 2) {
+                    response += (roomData[currentRoom].currentLoot[0].name + ' and ' + roomData[currentRoom].currentLoot[1].name + '.');
+                } else {
+                    roomData[currentRoom].currentLoot.forEach(function(item, index){
+                        response += item.name;
+                        if (index < (tmp - 2)) {
+                            response += ', ';
+                        } else {
+                            response += ' and '
+                        };
+                        response += '.';
+                    })
+                }
+                actionResponse(response);
+                break;
             case 'get':
                 var tmp = roomHasItem(currentRoom, parameter);
                 if (tmp > -1) {
                     roomData[currentRoom].currentLoot[tmp].give(playerCharacter[currentCharacter]);
+                    roomData[currentRoom].currentLoot.splice(tmp, 1);
                 } else {
                     actionResponse(ITEM_NOT_FOUND_IN_ROOM);
                 }
@@ -611,15 +635,19 @@ function go(event) {
                 }
                 break;
             case 'drop':
+                dropInventoryItem(playerCharacter[currentCharacter], parameter);
                 break;
-            case 'consume':
+            case 'eat':
+            case 'drink':
+                inventoryItemConsume(playerCharacter[currentCharacter], parameter);
                 break;
             default:
                 // Special actions defined in the room
                 if (roomData[currentRoom].actionResponses.hasOwnProperty(input)) {
                     actionResponse(roomData[currentRoom].actionResponses[input]['text']);
                     if (roomData[currentRoom].actionResponses[input].hasOwnProperty('func')) {
-                        roomData[currentRoom].actionResponses[input]['func']();
+                        var newFunc = new Function('', roomData[currentRoom].actionResponses[input]['func']);
+                        newFunc();
                     }
                 } else {
                     actionResponse('Huh?');
@@ -631,7 +659,7 @@ function go(event) {
 
 function resizeRoomInfoWindow () {
     __ui_window_height = window.innerHeight;
-    // __ui_window_width = window.innerWidth;
+    __ui_window_width = window.innerWidth;
     switch (true) {
         case (__ui_window_height <= 640):
             // Action response: 1em
@@ -642,7 +670,7 @@ function resizeRoomInfoWindow () {
             // Input: 2em
             // Total = 220px (1em = 16px)
             $('.room-row').height(__ui_window_height - 220 - 16 - 16);
-            // $('.room-row').width(__ui_window_width);
+            $('.container-fluid').width(__ui_window_width);
             break;
         default:
             // Action response: 2em
@@ -652,7 +680,7 @@ function resizeRoomInfoWindow () {
             // Input: 2em
             // Total = (2 + 2 + 2 + 12 + 2) x 16 = 320px (1em = 16px)
             $('.room-row').height(__ui_window_height - 320 - 80 - 80);
-            // $('.room-row').width(__ui_window_width);
+            $('.container-fluid').width(__ui_window_width);
             break;
     }
 }
@@ -662,12 +690,40 @@ function showModal (title, msg) {
     $('.container-fluid').css('filter', 'blur(2px)');
     $('#modal-title').text(title);
     $('#modal-text').text(msg);
-    __ui_modal.fadeIn(MODAL_FADE_IN_TIME);
+    // __ui_modal.fadeIn(MODAL_FADE_IN_TIME);
+    __ui_modal.modal('show'); // BECAUSE BOOTSTRAP. WHY?!
 }
 
 function hideModal (event) {
     $('.container-fluid').css('filter', 'blur(0px)');
-    __ui_modal.fadeOut(MODAL_FADE_IN_TIME)
+    // __ui_modal.fadeOut(MODAL_FADE_IN_TIME);
+    __ui_modal.modal('hide'); // BECAUSE BOOTSTRAP. WHY?!
+}
+
+function restart() {
+	location.reload();
+}
+
+function showPanel(event) {
+    switch ($(event.target).attr('class')) {
+        case 'cmdpanelshow':
+            __ui_inventory_panel.hide();
+            __ui_console_panel.hide();
+            __ui_command_panel.show();
+            break;
+        case 'invpanelshow':
+            __ui_inventory_panel.show();
+            __ui_console_panel.hide();
+            __ui_command_panel.hide();
+            break;
+        case 'consoleshow':
+            __ui_inventory_panel.hide();
+            __ui_console_panel.show();
+            __ui_command_panel.hide();
+            break;
+        default:
+            break;
+    }
 }
 
 $(function() {
@@ -684,7 +740,9 @@ $(function() {
     };
     __ui_game_message = $('.game-message');
     __ui_character_panel = $('.character-info');
-    __ui_inventory_panel = $('.command-panel');
+    __ui_inventory_panel = $('.inventory-panel');
+    __ui_command_panel = $('.command-panel');
+    __ui_console_panel = $('.console-panel');
     __ui_center_panel = $('.center-panel');
     __ui_enemy_panel = $('.enemy-info');
     __ui_command_bar = $('.command-bar');
@@ -705,7 +763,18 @@ $(function() {
 
     playerCharacter[currentCharacter] = new Character('template');
     // gotoRoom(localStorage.lastroom);
-    gotoRoom(0);
+    // gotoRoom(0);
+    $.getJSON('js/roomdata.json').done(function(roomjson){
+        roomData = roomjson.roomData;
+        $.getJSON('js/itemdata.json').done(function(itemjson){
+            lootData = itemjson;
+            $.getJSON('js/monsterdata.json').done(function(monsterjson){
+                enemyData = monsterjson;
+                // gotoRoom(localStorage.lastroom);
+                gotoRoom(0);
+            }).fail(function(){console.error('Failed to get mob data!')});
+        }).fail(function(){console.error('Failed to get item data!')});
+    }).fail(function(){console.error('Failed to get room data!')});
 
     // Enable swipe-based navigation (to turn off if touch-functionality is not detected)
     // Note: This is interfering with the scrolling of the room info element
@@ -716,7 +785,6 @@ $(function() {
            swipe: function(event, direction, distance, duration, fingerCount, fingerData) {
               switch (direction) {
                   case 'up':
-                    console.log('tried to move north');
                     move('n');
                     break;
                   case 'down':
@@ -737,8 +805,22 @@ $(function() {
         });
     }
 
-    __ui_modal.click(function(event){hideModal(event)});
-    $(window).keydown(function (event) {go(event)});
+    // __ui_modal.click(function(event){hideModal(event)});
+    $('#restart').click(restart);
+    $(window).on('keydown', function (event) {go(event)});
+    $('.cmdpanelshow', '.invpanelshow', '.consoleshow').click(showPanel);
+    
+    $('#cmd-look').click(function(){
+        if (roomData[currentRoom].actionResponses.hasOwnProperty('look')) {
+            actionResponse(roomData[currentRoom].actionResponses['look']['text']);
+            if (roomData[currentRoom].actionResponses['look'].hasOwnProperty('func')) {
+                var newFunc = new Function('', roomData[currentRoom].actionResponses['look']['func']);
+                newFunc();
+            }
+        } else {
+            actionResponse('Huh?');
+        };
+    })
 
     setTimeout(function(){
         $('#curtain').fadeOut(600);

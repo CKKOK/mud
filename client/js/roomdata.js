@@ -56,13 +56,13 @@ var roomData = [
         },
         onEnter: function(){
             if (!roomData[2].clear) {
+                gameMessage("A kobold and his pet rat fight you!", "white");
                 canMove = false;
                 roomData[2].fixedEnemies.forEach(function(e){
                     var tmp = new Enemy(e);
                     roomData[2].currentEnemies.push(tmp);
                     tmp.attack(playerCharacter[currentCharacter]);
                 });
-                gameMessage("A kobold and his pet rat fight you!", "white");
             } else {
                 roomData[2].currentEnemies.forEach(function(e){
                     e.inSameRoomAsPlayer = true;
