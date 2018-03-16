@@ -231,6 +231,18 @@ html, body {
     display: none;
 }
 
+.command-panel {
+    background-color: rgb(78, 76, 76);
+}
+
+.inventory-panel {
+    background-color: rgb(0, 43, 68);
+}
+
+.console-panel {
+    background-color: rgb(0, 68, 0);
+}
+
 .inventory-panel {
     display: block;
 }

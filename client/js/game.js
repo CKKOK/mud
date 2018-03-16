@@ -808,7 +808,7 @@ $(function() {
     // __ui_modal.click(function(event){hideModal(event)});
     $('#restart').click(restart);
     $(window).on('keydown', function (event) {go(event)});
-    $('.cmdpanelshow', '.invpanelshow', '.consoleshow').click(showPanel);
+    $('.cmdpanelshow, .invpanelshow, .consoleshow').click(showPanel);
     
     $('#cmd-look').click(function(){
         if (roomData[currentRoom].actionResponses.hasOwnProperty('look')) {
