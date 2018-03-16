@@ -377,7 +377,7 @@ html, body {
 }
 
 /* iPhone 5/5S/SE support D: */
-@media (max-height: 670px) {
+@media (max-height: 670px) and (max-width: 370px) {
     html {
         position: fixed;
         overflow: hidden;
