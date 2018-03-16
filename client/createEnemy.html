@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MUD Creator</title>
+    <style>
+        #title::before {
+            content: "Mob - ";
+        }
+
+        #title {
+            position:fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2em;
+            line-height: 2em;
+            text-align: center;
+            background-color: burlywood;
+            color: black;
+            font-weight: 800;
+        }
+
+        thead {
+            font-weight: 800;
+            text-transform:uppercase;
+            text-decoration: underline;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        .wrapper {
+            display: flex;
+            width: 100%;
+            padding-top: 1em;
+        }
+
+        .roomdata {
+            flex: 5;
+        }
+
+        .left {
+            flex: 1;
+            border-top: 60px solid transparent;
+            border-bottom: 60px solid transparent;
+            border-right: 60px solid green;
+            align-self: center;
+            margin-right: 40px;
+            cursor: pointer;
+        }
+
+        .right {
+            flex: 1;
+            width: 0;
+            height: 0;
+            border-top: 60px solid transparent;
+            border-bottom: 60px solid transparent;
+            border-left: 60px solid green;
+            align-self: center;
+            margin-left: 40px;
+            cursor: pointer;
+        }
+
+        .btn-add {
+            width: 50px;
+            height: 50px;
+            background: orangered;
+            border-radius: 25px;
+            position: fixed;
+            bottom: 20px;
+            right: 90px;
+            text-align: center;
+            font-size: 2em;
+            line-height: 50px;
+            cursor:copy;
+        }
+
+        .btn-save {
+            width: 50px;
+            height: 50px;
+            background: green;
+            border-radius: 25px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            text-align: center;
+            font-size: 1.5em;
+            line-height: 50px;
+            text-decoration: underline;
+            cursor:pointer;
+        }
+
+        .btn-save:hover, .btn-add:hover {
+            box-shadow:2px 2px darkgray;
+            transform:translate(-1px, -1px);
+        }
+
+        #file {
+            margin-top: 2.5em;
+        }
+    </style>
+</head>
+<body>
+    <div id="title">Mole</div>
+    <input type="file" id="file" name="file"/>
+    <div class="btn-add">+</div>
+    <div class="btn-save">&#9660;</div>
+    <div class="wrapper">
+        <div class="left"></div>
+        <div class="roomdata">
+            <form>
+                <table>
+                    <thead>
+                        <td>Field</td>
+                        <td>Value</td>
+                    </thead>
+                    <tr>
+                        <td><label for="mobName">Mob Name</label></td>
+                        <td><input type="text" name="mobName" id="mobName"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="mobShortName">Short Name</label></td>
+                        <td><input type="text" name="mobShortName" id="mobShortName"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="hp">Hitpoints</label></td>
+                        <td><input type="text" name="hp" id="hp"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="maxHp">Maximum Hitpoints</label></td>
+                        <td><input type="text" name="maxHp" id="maxHp"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="minDmg">Minimum Damage</label></td>
+                        <td><input type="text" name="minDmg" id="minDmg"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="maxDmg">Maximum Damage</label></td>
+                        <td><input type="text" name="maxDmg" id="maxDmg"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="cooldown">Cooldown (ms)</label></td>
+                        <td><input type="text" name="cooldown" id="cooldown"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="canFlee">Player can flee from</label></td>
+                        <td><input type="text" name="canFlee" id="canFlee"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="loot">Loot</label></td>
+                        <td><input type="text" name="loot" id="loot"></td>
+                    </tr>
+                </table>
+                    
+            </form>
+        </div>
+        <div class="right">
+        </div>
+    </div>
+    <script>
+        var data, mobs, currentMobShortName, currentIndex;
+        var title = document.querySelector('#title');
+        var mobName = document.querySelector('#mobName');
+        var mobShortName = document.querySelector('#mobShortName');
+        var hp = document.querySelector('#hp');
+        var maxHp = document.querySelector('#maxHp');
+        var minDmg = document.querySelector('#minDmg');
+        var maxDmg = document.querySelector('#maxDmg');
+        var cooldown = document.querySelector('#cooldown');
+        var canFlee = document.querySelector('#canFlee');
+        var loot = document.querySelector('#loot');
+
+        function loadData(mob) {
+            var mobData = data[mob];
+            currentMobShortName = mob;
+
+            title.textContent = mobData.name;
+
+            //var replaced = mobData.name.replace(/ /g, '+');
+
+            mobName.value = mobData.name;
+            mobShortName.value = mob;
+            hp.value = mobData.hp;
+            maxHp.value = mobData.maxhp;
+            minDmg.value = mobData.mindmg;
+            maxDmg.value = mobData.maxdmg;
+            cooldown.value = mobData.cooldown;
+            canFlee.value = mobData.canFlee;
+            loot.value = JSON.stringify(mobData.loot);
+        };
+
+        function handleFileSelect(event) {
+            reader = new FileReader();
+            reader.onload = function () {data = JSON.parse(this.result)};
+            reader.readAsText(event.target.files[0]);
+            setTimeout(function(){mobs = Object.keys(data); currentIndex = 0; loadData(mobs[currentIndex])}, 250);
+        }
+
+        function saveJSON(data) {
+            saveCurrentObject();
+            var blobObj = new Blob([JSON.stringify(data, null, 4)]);
+            var filename = prompt('File name (without .json extension): ');
+            if (window.navigator.msSaveBlob) {
+                window.navigator.msSaveBlob(blobObj, filename + '.json');
+            } else {
+                var a = document.createElement('a');
+                var url = URL.createObjectURL(blobObj);
+                a.href = url;
+                a.download = filename + '.json';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            }
+        }
+        
+        function clearAllFields() {
+            mobName.value = '';
+            mobShortName.value = '';
+            hp.value = '';
+            maxHp.value = '';
+            minDmg.value = '';
+            maxDmg.value = '';
+            cooldown.value = '';
+            canFlee.value = '';
+            loot.value = '';
+        }
+
+        function next() {
+            saveCurrentObject();
+            if (typeof(data[mobs[currentIndex+1]]) !== "undefined") {
+                clearAllFields();
+                currentIndex++;
+                loadData(mobs[currentIndex]);
+            }
+        }
+
+        function prev() {
+            saveCurrentObject();
+            if (typeof(data[mobs[currentIndex-1]]) !== "undefined") {
+                clearAllFields();
+                currentIndex--;
+                loadData(mobs[currentIndex]);
+            }
+        }
+
+        function gotoItem(index) {
+            saveCurrentObject();
+            if (typeof(data[mobs[index]]) !== "undefined") {
+                clearAllFields();
+                currentIndex = index;
+                loadData(mobs[currentIndex]);
+            }
+        }
+
+        function saveCurrentObject() {
+            if (mobShortName.value === '') {
+                console.error('Short name handle cannot be empty!');
+                return;
+            }
+
+            if (typeof(data[currentMobShortName]) === undefined || mobShortName.value !== currentMobShortName) {
+                currentMobShortName = mobShortName.value;
+                data[currentMobShortName] = {};
+                mobs.push(currentMobShortName);
+            };
+
+            mob = data[currentMobShortName];
+
+            mob.name = mobName.value;
+            // mob.shortname = mobShortName.value;
+            mob.hp = hp.value;
+            mob.maxhp = maxHp.value;
+            mob.mindmg = minDmg.value;
+            mob.maxdmg = maxDmg.value;
+            mob.cooldown = cooldown.value;
+            mob.canFlee = canFlee.value;
+            mob.loot = JSON.parse(loot.value);
+            
+        }
+
+        function addNewObject() {
+            saveCurrentObject();
+            clearAllFields();
+            currentIndex = mobs.length;
+            title.textContent = 'New';
+            mobShortName.focus();
+        }
+
+        function save() {
+            saveJSON(data);
+        }
+
+        document.getElementById('file').addEventListener('change', handleFileSelect, false);
+        document.querySelector('.left').addEventListener('click', prev);
+        document.querySelector('.right').addEventListener('click', next);
+        document.querySelector('.btn-add').addEventListener('click', addNewObject);
+        document.querySelector('.btn-save').addEventListener('click', save);
+    </script>
+</body>
+</html>

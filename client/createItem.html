@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MUD Creator</title>
+    <style>
+        #itemTitle::before {
+            content: "Item - ";
+        }
+
+        #itemTitle {
+            position:fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2em;
+            line-height: 2em;
+            text-align: center;
+            background-color: darkgreen;
+            color: white;
+            font-weight: 800;
+        }
+
+        thead {
+            font-weight: 800;
+            text-transform:uppercase;
+            text-decoration: underline;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        .wrapper {
+            display: flex;
+            width: 100%;
+            padding-top: 1em;
+        }
+
+        .roomdata {
+            flex: 5;
+        }
+
+        .left {
+            flex: 1;
+            border-top: 60px solid transparent;
+            border-bottom: 60px solid transparent;
+            border-right: 60px solid green;
+            align-self: center;
+            margin-right: 40px;
+            cursor: pointer;
+        }
+
+        .right {
+            flex: 1;
+            width: 0;
+            height: 0;
+            border-top: 60px solid transparent;
+            border-bottom: 60px solid transparent;
+            border-left: 60px solid green;
+            align-self: center;
+            margin-left: 40px;
+            cursor: pointer;
+        }
+
+        .btn-add {
+            width: 50px;
+            height: 50px;
+            background: orangered;
+            border-radius: 25px;
+            position: fixed;
+            bottom: 20px;
+            right: 90px;
+            text-align: center;
+            font-size: 2em;
+            line-height: 50px;
+            cursor:copy;
+        }
+
+        .btn-save {
+            width: 50px;
+            height: 50px;
+            background: green;
+            border-radius: 25px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            text-align: center;
+            font-size: 1.5em;
+            line-height: 50px;
+            text-decoration: underline;
+            cursor:pointer;
+        }
+
+        .btn-save:hover, .btn-add:hover {
+            box-shadow:2px 2px darkgray;
+            transform:translate(-1px, -1px);
+        }
+
+        #file {
+            margin-top: 2.5em;
+        }
+    </style>
+</head>
+<body>
+    <div id="itemTitle">The Rosetta Stone</div>
+    <input type="file" id="file" name="file"/>
+    <div class="btn-add">+</div>
+    <div class="btn-save">&#9660;</div>
+    <div class="wrapper">
+        <div class="left"></div>
+        <div class="roomdata">
+            <form>
+                <table>
+                    <thead>
+                        <td>Field</td>
+                        <td>Value</td>
+                    </thead>
+                    <tr>
+                        <td><label for="itemName">Item Name</label></td>
+                        <td><input type="text" name="itemName" id="itemName"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="itemShortName">Short Name</label></td>
+                        <td><input type="text" name="itemShortName" id="itemShortName"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="class">Class</label></td>
+                        <td><input type="text" name="class" id="class"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="minDmg">Minimum Damage</label></td>
+                        <td><input type="text" name="minDmg" id="minDmg"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="maxDmg">Maximum Damage</label></td>
+                        <td><input type="text" name="maxDmg" id="maxDmg"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="cooldown">Cooldown (ms)</label></td>
+                        <td><input type="text" name="cooldown" id="cooldown"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="hpBonus">HP Bonus</label></td>
+                        <td><input type="text" name="hpBonus" id="hpBonus"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="hpRestore">HP Restore</label></td>
+                        <td><input type="text" name="hpRestore" id="hpRestore"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="onConsume">On Consume Function <br> (Parameters: 'owner')</label></td>
+                        <td><textarea name="onConsume" id="onConsume" cols="50" rows="10"></textarea></td>
+                    </tr>
+                </table>
+                    
+            </form>
+        </div>
+        <div class="right">
+        </div>
+    </div>
+    <script>
+        var data, items, currentItemShortName, currentIndex;
+        var itemTitle = document.querySelector('#itemTitle');
+        var itemName = document.querySelector('#itemName');
+        var itemShortName = document.querySelector('#itemShortName');
+        var itemClass = document.querySelector('#class');
+        var minDmg = document.querySelector('#minDmg');
+        var maxDmg = document.querySelector('#maxDmg');
+        var cooldown = document.querySelector('#cooldown');
+        var hpBonus = document.querySelector('#hpBonus');
+        var hpRestore = document.querySelector('#hpRestore');
+        var onConsume = document.querySelector('#onConsume');
+
+        function loadData(item) {
+            var itemData = data[item];
+            currentItemShortName = item;
+
+            itemTitle.textContent = itemData.name;
+
+            itemName.value = itemData.name;
+            itemShortName.value = itemData.shortname;
+            itemClass.value = itemData.class;
+            
+            switch (itemData.class) {
+                case "weapon": 
+                    minDmg.value = itemData.mindmg;
+                    maxDmg.value = itemData.maxdmg;
+                    cooldown.value = itemData.cooldown;
+                    break;
+                case "armour":
+                    hpBonus.value = itemData.hpbonus;
+                    break;
+                case "consumable":
+                    hpRestore.value = itemData.hprestore;
+                    onConsume.value = itemData.onConsume;
+                    break;
+                default:
+                    console.error("Undefined item class!")
+                    break;
+            }
+        };
+
+        function handleFileSelect(event) {
+            reader = new FileReader();
+            reader.onload = function () {data = JSON.parse(this.result)};
+            reader.readAsText(event.target.files[0]);
+            setTimeout(function(){items = Object.keys(data);currentIndex = 0; loadData(items[currentIndex])}, 250);
+        }
+
+        function saveJSON(data) {
+            saveCurrentObject();
+            var blobObj = new Blob([JSON.stringify(data, null, 4)]);
+            var filename = prompt('File name (without .json extension): ');
+            if (window.navigator.msSaveBlob) {
+                window.navigator.msSaveBlob(blobObj, filename + '.json');
+            } else {
+                var a = document.createElement('a');
+                var url = URL.createObjectURL(blobObj);
+                a.href = url;
+                a.download = filename + '.json';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            }
+        }
+        
+        function clearAllFields() {
+            itemName.value = '';
+            itemShortName.value = '';
+            itemClass.value = '';
+            minDmg.value = '';
+            maxDmg.value = '';
+            cooldown.value = '';
+            hpBonus.value = '';
+            hpRestore.value = '';
+            onConsume.value = '';
+        }
+
+        function next() {
+            saveCurrentObject();
+            if (typeof(data[items[currentIndex+1]]) !== "undefined") {
+                clearAllFields();
+                currentIndex++;
+                loadData(items[currentIndex]);
+            }
+        }
+
+        function prev() {
+            saveCurrentObject();
+            if (typeof(data[items[currentIndex-1]]) !== "undefined") {
+                clearAllFields();
+                currentIndex--;
+                loadData(items[currentIndex]);
+            }
+        }
+
+        function gotoItem(index) {
+            saveCurrentObject();
+            if (typeof(data[items[index]]) !== "undefined") {
+                clearAllFields();
+                currentIndex = index;
+                loadData(items[currentIndex]);
+            }
+        }
+
+        function saveCurrentObject() {
+            if (itemShortName.value === '') {
+                console.error('Short name handle cannot be empty!');
+                return;
+            }
+
+            if (typeof(data[currentItemShortName]) === undefined || itemShortName.value !== currentItemShortName) {
+                currentItemShortName = itemShortName.value;
+                data[currentItemShortName] = {};
+                items.push(currentItemShortName);
+            };
+
+            item = data[currentItemShortName];
+
+            item.name = itemName.value;
+            item.shortname = itemShortName.value;
+            item.class = itemClass.value;
+
+            switch (item.class) {
+                case "weapon": 
+                    item.mindmg = minDmg.value;
+                    item.maxdmg = maxDmg.value;
+                    item.cooldown = cooldown.value;
+                    break;
+                case "armour":
+                    item.hpbonus = hpBonus.value;
+                    break;
+                case "consumable":
+                    item.hprestore = hpRestore.value;
+                    item.onConsume = onConsume.value;
+                    break;
+                default:
+                    console.error("Undefined item class!")
+                    break;
+            }
+        }
+
+        function addNewObject() {
+            saveCurrentObject();
+            clearAllFields();
+            currentIndex = items.length;
+            itemTitle.textContent = 'New';
+            itemShortName.focus();
+        }
+
+        function save() {
+            saveJSON(data);
+        }
+
+        document.getElementById('file').addEventListener('change', handleFileSelect, false);
+        document.querySelector('.left').addEventListener('click', prev);
+        document.querySelector('.right').addEventListener('click', next);
+        document.querySelector('.btn-add').addEventListener('click', addNewObject);
+        document.querySelector('.btn-save').addEventListener('click', save);
+    </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MUD Creator</title>
+    <style>
+        #roomNumber::before {
+            content: "Room number ";
+        }
+
+        #roomNumber {
+            position:fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2em;
+            line-height: 2em;
+            text-align: center;
+            background-color: maroon;
+            color: white;
+            font-weight: 800;
+        }
+
+        thead {
+            font-weight: 800;
+            text-transform:uppercase;
+            text-decoration: underline;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        #n, #s, #e, #w {
+            width: 3em;
+            margin-left: 0.25em;
+            margin-right: 0.25em;
+        }
+
+        .wrapper {
+            display: flex;
+            width: 100%;
+            padding-top: 1em;
+        }
+
+        .roomdata {
+            flex: 5;
+        }
+
+        .left {
+            flex: 1;
+            border-top: 60px solid transparent;
+            border-bottom: 60px solid transparent;
+            border-right: 60px solid green;
+            align-self: center;
+            margin-right: 40px;
+            cursor: pointer;
+        }
+
+        .right {
+            flex: 1;
+            width: 0;
+            height: 0;
+            border-top: 60px solid transparent;
+            border-bottom: 60px solid transparent;
+            border-left: 60px solid green;
+            align-self: center;
+            margin-left: 40px;
+            cursor: pointer;
+        }
+
+        .btn-add {
+            width: 50px;
+            height: 50px;
+            background: orangered;
+            border-radius: 25px;
+            position: fixed;
+            bottom: 20px;
+            right: 90px;
+            text-align: center;
+            font-size: 2em;
+            line-height: 50px;
+            cursor:copy;
+        }
+
+        .btn-save {
+            width: 50px;
+            height: 50px;
+            background: green;
+            border-radius: 25px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            text-align: center;
+            font-size: 1.5em;
+            line-height: 50px;
+            text-decoration: underline;
+            cursor:pointer;
+        }
+
+        .btn-save:hover, .btn-add:hover {
+            box-shadow:2px 2px darkgray;
+            transform:translate(-1px, -1px);
+        }
+
+        #file {
+            margin-top: 2.5em;
+        }
+    </style>
+</head>
+<body>
+    <div id="roomNumber">1</div>
+    <input type="file" id="file" name="file"/>
+    <div class="btn-add">+</div>
+    <div class="btn-save">&#9660;</div>
+    <div class="wrapper">
+        <div class="left"></div>
+        <div class="roomdata">
+            <form>
+                <table>
+                    <thead>
+                        <td>Field</td>
+                        <td>Value</td>
+                    </thead>
+                    <tr>
+                        <td><label for="roomTitle">Room Title</label></td>
+                        <td><input type="text" name="roomTitle" id="roomTitle"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="roomInfo">Room Text</label></td>
+                        <td><textarea name="roomInfo" id="roomInfo" cols="50" rows="10"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td><label for="navChoices">Navigation Choices</label></td>
+                        <td><label for="n">N</label><input type="text" name="n" id="n">
+                            <label for="s">S</label><input type="text" name="s" id="s">
+                            <label for="e">E</label><input type="text" name="e" id="e">
+                            <label for="w">W</label><input type="text" name="w" id="w"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="fixedEnemies">Fixed Enemies (array)</label></td>
+                        <td><input type="text" name="fixedEnemies" id="fixedEnemies"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="loot">Room Loot (array)</label></td>
+                        <td><input type="text" name="roomLoot" id="roomLoot"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="actionResponses">Action Responses (obj of obj)</label></td>
+                        <td><textarea name="actionResponses" id="actionResponses" cols="50" rows="10"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td><label for="onEnter">On Enter Function</label></td>
+                        <td><textarea name="onEnter" id="onEnter" cols="50" rows="10"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td><label for="onExit">On Exit Function</label></td>
+                        <td><textarea name="onExit" id="onExit" cols="50" rows="10"></textarea></td>
+                    </tr>
+                </table>
+                    
+            </form>
+        </div>
+        <div class="right">
+        </div>
+    </div>
+    <script>
+        var file, roomIndex, currentRoom, roomData;
+        var roomTitle = document.querySelector('#roomTitle');
+        var roomInfo = document.querySelector('#roomInfo');
+        var navChoices = {"n": document.querySelector('#n'), "s": document.querySelector('#s'), "e": document.querySelector('#e'), "w": document.querySelector('#w')};
+        var fixedEnemies = document.querySelector('#fixedEnemies');
+        var roomLoot = document.querySelector('#roomLoot');
+        var actionResponses = document.querySelector('#actionResponses');
+        var onEnter = document.querySelector('#onEnter');
+        var onExit = document.querySelector('#onExit');
+        var visited, clear, currentEnemies, currentLoot;
+        var visitedDefault = false, clearDefault = false, currentEnemiesDefault = [], currentLootDefault = [];
+
+        function loadData(index) {
+            var roomData = file.roomData[index];
+            roomIndex = index;
+
+            document.querySelector('#roomNumber').textContent = roomData.__comment.slice(-1) + ' - ' + roomData.roomTitle;
+
+            roomTitle.value = roomData.roomTitle;
+            roomInfo.value = roomData.roomInfo;
+            if (typeof(roomData.navChoices.n) !== "undefined") {navChoices.n.value = roomData.navChoices.n};
+            if (typeof(roomData.navChoices.s) !== "undefined") {navChoices.s.value = roomData.navChoices.s};
+            if (typeof(roomData.navChoices.e) !== "undefined") {navChoices.e.value = roomData.navChoices.e};
+            if (typeof(roomData.navChoices.w) !== "undefined") {navChoices.w.value = roomData.navChoices.w};
+            fixedEnemies.value = JSON.stringify(roomData.fixedEnemies);
+            roomLoot.value = JSON.stringify(roomData.loot);
+            actionResponses.value = JSON.stringify(roomData.actionResponses, null, 2);
+            if (roomData.onEnter !== "" && typeof(roomData.onEnter) !== "undefined") {onEnter.value = roomData.onEnter};
+            if (roomData.onExit !== "" && typeof(roomData.onExit) !== "undefined") {onExit.value = roomData.onExit};
+
+            visited = roomData.visited;
+            clear = roomData.clear;
+            currentEnemies = roomData.currentEnemies;
+            currentLoot = roomData.currentLoot;
+        };
+
+        function getDataFromForm() {
+            var newRoom = {};
+            var file;
+            newRoom.roomTitle = roomTitle.value;
+            newRoom.roomInfo = roomInfo.value;
+            newRoom.navChoices = {};
+            if (navChoices.n.value !== "" && typeof(navChoices.n.value) !== "undefined") {newRoom.navChoices.n = navChoices.n.value};
+            if (navChoices.s.value !== "" && typeof(navChoices.s.value) !== "undefined") {newRoom.navChoices.s = navChoices.s.value};
+            if (navChoices.e.value !== "" && typeof(navChoices.e.value) !== "undefined") {newRoom.navChoices.e = navChoices.e.value};
+            if (navChoices.w.value !== "" && typeof(navChoices.w.value) !== "undefined") {newRoom.navChoices.w = navChoices.w.value};
+            newRoom.visited = visited;
+            if (typeof(fixedEnemies.value) !== "undefined") {
+                if (fixedEnemies.value[0] === "[" && fixedEnemies.value.slice(-1) === "]") {
+                    newRoom.fixedEnemies = JSON.parse(fixedEnemies.value)
+                } else {
+                    newRoom.fixedEnemies = JSON.parse("[" + fixedEnemies.value + "]")
+                };
+                
+            };
+            newRoom.clear = clear;
+            newRoom.currentEnemies = currentEnemies;
+            if (typeof(roomLoot.value) !== "undefined") {
+                if (roomLoot.value[0] === "[" && roomLoot.value.slice(-1) === "]") {
+                    newRoom.roomLoot = JSON.parse(roomLoot.value);
+                } else {
+                    newRoom.roomLoot = JSON.parse("[" + roomLoot.value + "]");
+                };
+            };
+            newRoom.currentLoot = currentLoot;
+            if (typeof(actionResponses.value) !== "undefined") {newRoom.actionResponses = JSON.parse(actionResponses.value)};
+            newRoom.onEnter = onEnter.value;
+            newRoom.onExit = onExit.value;
+
+            return newRoom;
+        }
+
+        function handleFileSelect(event) {
+            var reader = new FileReader();
+            reader.onload = function () {file = JSON.parse(this.result)};
+            reader.readAsText(event.target.files[0]);
+            roomIndex = 0;
+            setTimeout(function(){loadData(roomIndex)}, 250);
+        }
+
+        function saveJSON(data) {
+            var blobObj = new Blob([JSON.stringify(data, null, 4)]);
+            var filename = prompt('File name (without .json extension): ');
+            if (window.navigator.msSaveBlob) {
+                window.navigator.msSaveBlob(blobObj, filename + '.json');
+            } else {
+                var a = document.createElement('a');
+                var url = URL.createObjectURL(blobObj);
+                a.href = url;
+                a.download = filename + '.json';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 0);
+            }
+        }
+        
+        function clearAllFields() {
+            roomTitle.value = '';
+            roomInfo.value = '';
+            navChoices.n.value = '';
+            navChoices.s.value = '';
+            navChoices.e.value = '';
+            navChoices.w.value = '';
+            fixedEnemies.value = '';
+            roomLoot.value = '';
+            actionResponses.value = '';
+            onEnter.value = '';
+            onExit.value = '';
+        }
+
+        function nextRoom() {
+            saveCurrentRoom();
+            if (typeof(file.roomData[roomIndex+1]) !== "undefined") {
+                clearAllFields();
+                roomIndex++;
+                loadData(roomIndex);
+            }
+        }
+
+        function prevRoom() {
+            saveCurrentRoom();
+            if (typeof(file.roomData[roomIndex-1]) !== "undefined") {
+                clearAllFields();
+                roomIndex--;
+                loadData(roomIndex);
+            }
+        }
+
+        function gotoRoom(index) {
+            saveCurrentRoom();
+            if (typeof(file.roomData[index]) !== "undefined") {
+                clearAllFields();
+                roomIndex = index;
+                loadData(roomIndex);
+            }
+        }
+
+        function saveCurrentRoom() {
+            roomData = file.roomData[roomIndex];
+
+            roomData.roomTitle = roomTitle.value;
+            roomData.roomInfo = roomInfo.value;
+            if (navChoices.n.value !== "" && navChoices.n.value !== "undefined") {roomData.navChoices.n = navChoices.n.value};
+            if (navChoices.s.value !== "" && navChoices.s.value !== "undefined") {roomData.navChoices.s = navChoices.s.value};
+            if (navChoices.e.value !== "" && navChoices.e.value !== "undefined") {roomData.navChoices.e = navChoices.e.value};
+            if (navChoices.w.value !== "" && navChoices.w.value !== "undefined") {roomData.navChoices.w = navChoices.w.value};
+            if (fixedEnemies.value !== "" && fixedEnemies.value !== "undefined") {roomData.fixedEnemies = JSON.parse(fixedEnemies.value)};
+            if (roomLoot.value !== "" && roomLoot.value !== "undefined") {roomData.loot = JSON.parse(roomLoot.value)};
+            if (actionResponses.value !== "" && actionResponses.value !== "undefined") {roomData.actionResponses = JSON.parse(actionResponses.value)};
+            if (onEnter.value !== "" && onEnter.value !== "undefined") {roomData.onEnter = onEnter.value};
+            if (onExit.value !== "" && onExit.value !== "undefined") {roomData.onExit = onExit.value};
+
+            roomData.visited = visited;
+            roomData.clear = clear;
+            roomData.currentEnemies = currentEnemies;
+            roomData.currentLoot = currentLoot;
+        }
+
+        function addNewRoom() {
+            saveCurrentRoom();
+            clearAllFields();
+            roomIndex = file.roomData.length;
+            currentRoom = {};
+            currentRoom.__comment = "Room " + (roomIndex);
+            currentRoom.navChoices = {};
+            currentRoom.actionResponses = {};
+            file.roomData[roomIndex] = currentRoom;
+            document.querySelector('#roomNumber').textContent = roomIndex;
+            roomTitle.focus();
+        }
+
+        function save() {
+            saveJSON(file);
+        }
+
+        document.getElementById('file').addEventListener('change', handleFileSelect, false);
+        document.querySelector('.left').addEventListener('click', prevRoom);
+        document.querySelector('.right').addEventListener('click', nextRoom);
+        document.querySelector('.btn-add').addEventListener('click', addNewRoom);
+        document.querySelector('.btn-save').addEventListener('click', save);
+    </script>
+</body>
+</html>
